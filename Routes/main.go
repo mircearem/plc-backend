@@ -8,8 +8,6 @@ import (
 	"plc-backend/Shm"
 
 	"github.com/go-playground/validator/v10"
-	//"github.com/mircearem/plc-backend/File"
-	//"github.com/mircearem/plc-backend/Shm"
 )
 
 type settings struct {
