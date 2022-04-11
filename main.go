@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	auth "plc-backend/Auth"
 	"plc-backend/File"
 	"plc-backend/Helmet"
 	s "plc-backend/Settings"
@@ -43,6 +44,7 @@ func setup() {
 	r.HandleFunc("/ws", ws.Write)
 
 	// Route handlers
+	r.HandleFunc("/signup", auth.Register).Methods("POST")
 	r.HandleFunc("/settings", settings.Get).Methods("GET")
 	r.HandleFunc("/settings", settings.Set).Methods("POST")
 
