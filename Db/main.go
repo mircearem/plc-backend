@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	util "plc-backend/Utils"
+	"strconv"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -47,12 +48,28 @@ func FindUser(file string, user *util.User) (*util.User, error) {
 	return result, nil
 }
 
-func InsertUser(file string, user *util.User) (*util.User, error) {
+func InsertUser(file string, user *util.User) error {
 	db, err := sql.Open("sqlite3", file)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return user, nil
+	query := fmt.Sprintf(`
+		INSERT INTO users 
+		(username, password, email, admin)
+		VALUES
+		('%s', '%s', '%s', '%s');`,
+		user.Username, user.Password, user.Email, strconv.FormatBool(*user.Admin))
+
+	insert, _ := db.Prepare(query)
+
+	_, err = insert.Exec()
+
+	if err != nil {
+		return err
+	}
+
+	db.Close()
+	return nil
 }

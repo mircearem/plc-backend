@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
-	db "plc-backend/DB"
+	db "plc-backend/Db"
 	util "plc-backend/Utils"
 )
 
@@ -49,9 +49,17 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	// User is not already in the database, insert the user
 	// Step 1. Hash the user's password
+	insertErr := db.InsertUser(path, user)
+
+	if insertErr != nil {
+		resp, _ := json.Marshal(insertErr)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(resp)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
-	return
+	//return
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
