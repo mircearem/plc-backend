@@ -1,4 +1,4 @@
-package auth
+package Utils
 
 import (
 	"regexp"
@@ -10,13 +10,32 @@ import (
 type User struct {
 	Username string `json:"username" validate:"required,username"`
 	Password string `json:"password" validate:"required,password"`
+	Email    string `json:"email" validate:"required"`
 	Admin    *bool  `json:"admin" validate:"required"`
 }
 
-type errorResponse struct {
-	FailedField string
-	Tag         string
-	Value       string
+func (user *User) Validate() []*ErrorResponse {
+	validate := validator.New()
+	var errors []*ErrorResponse
+
+	// Register validation functions
+	validate.RegisterValidation("username", validateUsername)
+	validate.RegisterValidation("password", validatePassword)
+
+	err := validate.Struct(user)
+
+	// Append errors if they exist
+	if err != nil {
+		for _, err := range err.(validator.ValidationErrors) {
+			var element ErrorResponse
+			element.FailedField = err.StructNamespace()
+			element.Tag = err.Tag()
+			element.Value = err.Param()
+			errors = append(errors, &element)
+		}
+	}
+
+	return errors
 }
 
 func validateUsername(fl validator.FieldLevel) bool {
@@ -64,28 +83,4 @@ func validatePassword(fl validator.FieldLevel) bool {
 	}
 
 	return len >= 8 && number && symbol && upper
-}
-
-func validate(usr User) []*errorResponse {
-	validate := validator.New()
-	var errors []*errorResponse
-
-	// Register validation functions
-	validate.RegisterValidation("username", validateUsername)
-	validate.RegisterValidation("password", validatePassword)
-
-	err := validate.Struct(usr)
-
-	// Append errors if they exist
-	if err != nil {
-		for _, err := range err.(validator.ValidationErrors) {
-			var element errorResponse
-			element.FailedField = err.StructNamespace()
-			element.Tag = err.Tag()
-			element.Value = err.Param()
-			errors = append(errors, &element)
-		}
-	}
-
-	return errors
 }

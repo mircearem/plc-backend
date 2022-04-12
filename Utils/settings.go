@@ -1,4 +1,4 @@
-package Settings
+package Utils
 
 import (
 	"encoding/json"
@@ -19,15 +19,28 @@ type Settings struct {
 	Tv    float32 `json:"Tv" validate:"required,numeric"`
 }
 
-type errorResponse struct {
-	FailedField string
-	Tag         string
-	Value       string
-}
-
 type SettingsHandler struct {
 	sync.Mutex
 	Settings Settings
+}
+
+func ValidateSettings(set Settings) []*ErrorResponse {
+	validate := validator.New()
+	var errors []*ErrorResponse
+
+	err := validate.Struct(set)
+
+	if err != nil {
+		for _, err := range err.(validator.ValidationErrors) {
+			var element ErrorResponse
+			element.FailedField = err.StructNamespace()
+			element.Tag = err.Tag()
+			element.Value = err.Param()
+			errors = append(errors, &element)
+		}
+	}
+
+	return errors
 }
 
 func NewSettingsHandler() *SettingsHandler {
@@ -49,7 +62,7 @@ func (s *SettingsHandler) Set(w http.ResponseWriter, r *http.Request) {
 	settings := new(Settings)
 	_ = json.NewDecoder(r.Body).Decode(&settings)
 
-	valid_err := validate(*settings)
+	valid_err := ValidateSettings(*settings)
 
 	// Invalid settings format, exit
 	if valid_err != nil {
@@ -90,24 +103,4 @@ func (s *SettingsHandler) Set(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(writer_err.Error()))
 		return
 	}
-
-}
-
-func validate(str Settings) []*errorResponse {
-	validate := validator.New()
-	var errors []*errorResponse
-
-	err := validate.Struct(str)
-
-	if err != nil {
-		for _, err := range err.(validator.ValidationErrors) {
-			var element errorResponse
-			element.FailedField = err.StructNamespace()
-			element.Tag = err.Tag()
-			element.Value = err.Param()
-			errors = append(errors, &element)
-		}
-	}
-
-	return errors
 }

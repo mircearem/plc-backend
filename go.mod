@@ -14,6 +14,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/joho/godotenv v1.4.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
+	github.com/mattn/go-sqlite3 v1.14.12 // indirect
 	github.com/rs/cors v1.8.2 // indirect
 	golang.org/x/crypto v0.0.0-20220128200615-198e4374d7ed // indirect
 	golang.org/x/sys v0.0.0-20210806184541-e5e7981a1069 // indirect
