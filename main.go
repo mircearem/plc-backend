@@ -52,6 +52,7 @@ func setup() {
 	handler := cors.Default().Handler(r)
 
 	// Serve
+	//log.Println("Starting service on")
 	log.Fatal(http.ListenAndServe(":3000", handler))
 }
 

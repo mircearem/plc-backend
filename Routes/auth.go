@@ -6,6 +6,8 @@ import (
 	"os"
 	db "plc-backend/Db"
 	util "plc-backend/Utils"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 func Register(w http.ResponseWriter, r *http.Request) {
@@ -49,6 +51,18 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	// User is not already in the database, insert the user
 	// Step 1. Hash the user's password
+	password := []byte(user.Password)
+	hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+
+	// Check for error while hashing
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	user.Password = string(hash)
+
+	// Step 2. Insert the user into the database
 	insertErr := db.InsertUser(path, user)
 
 	if insertErr != nil {
