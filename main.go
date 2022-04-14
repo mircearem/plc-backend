@@ -44,7 +44,9 @@ func setup() {
 	r.HandleFunc("/ws", ws.Write)
 
 	// Route handlers
-	r.HandleFunc("/signup", Routes.Register).Methods("POST")
+	r.HandleFunc("/users/signup", Routes.Register).Methods("POST")
+	r.HandleFunc("/users/update", Routes.UpdateUser).Methods("POST")
+	r.HandleFunc("/users/login", Routes.Login).Methods("POST")
 	r.HandleFunc("/settings", settings.Get).Methods("GET")
 	r.HandleFunc("/settings", settings.Set).Methods("POST")
 

@@ -24,15 +24,15 @@ type SettingsHandler struct {
 	Settings Settings
 }
 
-func ValidateSettings(set Settings) []*ErrorResponse {
+func ValidateSettings(set Settings) []*errorResponse {
 	validate := validator.New()
-	var errors []*ErrorResponse
+	var errors []*errorResponse
 
 	err := validate.Struct(set)
 
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
-			var element ErrorResponse
+			var element errorResponse
 			element.FailedField = err.StructNamespace()
 			element.Tag = err.Tag()
 			element.Value = err.Param()

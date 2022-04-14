@@ -2,6 +2,7 @@ package Routes
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	db "plc-backend/Db"
@@ -33,7 +34,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	path := pwd + "/app.db"
 
 	// Check to see wether the username provided is already taken
-	usr, dbErr := db.FindUser(path, user)
+	usr, dbErr := db.FindUserByStruct(path, user)
 
 	// If db cannot be accessed, return internal server error
 	if dbErr != nil {
@@ -45,6 +46,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	// If username or email is already in the database, return error
 	if usr != nil {
+		fmt.Println(*usr)
 		w.WriteHeader(http.StatusConflict)
 		return
 	}
@@ -73,9 +75,62 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	//return
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Parse username and password
+	loginRequest := new(util.LoginRequest)
+	_ = json.NewDecoder(r.Body).Decode(&loginRequest)
+
+	validationErr := loginRequest.Validate()
+
+	if validationErr != nil {
+		resp, _ := json.Marshal(validationErr)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(resp)
+		return
+	}
+
+	// Get the path to the db file
+	pwd, _ := os.Getwd()
+	path := pwd + "/app.db"
+
+	// Check to see wether the username provided is already taken
+	usr, dbErr := db.FindUserByUsername(path, loginRequest.Username)
+
+	// If db cannot be accessed, return internal server error
+	if dbErr != nil {
+		resp, _ := json.Marshal(dbErr)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(resp)
+		return
+	}
+
+	result, _ := json.Marshal(*usr)
+	w.WriteHeader(http.StatusOK)
+	w.Write(result)
+}
+
+func UpdateUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	keys, ok := r.URL.Query()["key"]
+
+	// if there are no params in the request, send back error
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	username := keys[0]
+
+	fmt.Println(username)
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 }

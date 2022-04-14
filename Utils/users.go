@@ -14,9 +14,9 @@ type User struct {
 	Admin    *bool  `json:"admin" validate:"required"`
 }
 
-func (user *User) Validate() []*ErrorResponse {
+func (user *User) Validate() []*errorResponse {
 	validate := validator.New()
-	var errors []*ErrorResponse
+	var errors []*errorResponse
 
 	// Register validation functions
 	validate.RegisterValidation("username", validateUsername)
@@ -27,7 +27,7 @@ func (user *User) Validate() []*ErrorResponse {
 	// Append errors if they exist
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
-			var element ErrorResponse
+			var element errorResponse
 			element.FailedField = err.StructNamespace()
 			element.Tag = err.Tag()
 			element.Value = err.Param()
