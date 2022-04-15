@@ -34,20 +34,24 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	path := pwd + "/app.db"
 
 	// Check to see wether the username provided is already taken
-	usr, dbErr := db.FindUserByStruct(path, user)
+	result, dbErr := db.FindUserForSignup(path, user)
 
 	// If db cannot be accessed, return internal server error
 	if dbErr != nil {
-		resp, _ := json.Marshal(dbErr)
+		resp, _ := json.Marshal(*dbErr)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(resp)
 		return
 	}
 
 	// If username or email is already in the database, return error
-	if usr != nil {
-		fmt.Println(*usr)
+	if result {
+		result := util.DatabaseError{
+			Message: "Username or email already in use",
+		}
+		json, _ := json.Marshal(result)
 		w.WriteHeader(http.StatusConflict)
+		w.Write(json)
 		return
 	}
 
@@ -98,7 +102,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	path := pwd + "/app.db"
 
 	// Check to see wether the username provided is already taken
-	usr, dbErr := db.FindUserByUsername(path, loginRequest.Username)
+	usr, dbErr := db.FindUserForLogin(path, loginRequest.Username)
 
 	// If db cannot be accessed, return internal server error
 	if dbErr != nil {
@@ -108,7 +112,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, _ := json.Marshal(*usr)
+	result, _ := json.Marshal(usr)
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }

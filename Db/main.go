@@ -9,78 +9,71 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func FindUserByStruct(file string, user *util.User) (*util.User, error) {
-	result := new(util.User)
-
+func FindUserForSignup(file string, user *util.User) (bool, *util.DatabaseError) {
 	db, err := sql.Open("sqlite3", file)
+	defer db.Close()
 
 	// Error opening the database file
 	if err != nil {
-		return nil, err
+		err := util.DatabaseError{
+			Message: "Unable to open database file",
+		}
+		return false, &err
 	}
 
 	// Format the query string
-	query := fmt.Sprintf(`
-		SELECT username,email 
-		FROM users 
-		WHERE username='%s' OR email='%s';
-		`, user.Username, user.Email)
+	query := fmt.Sprintf(`SELECT username,email FROM users WHERE username='%s' OR email='%s';`, user.Username, user.Email)
 
 	// Execute query
-	rows, _ := db.Query(query)
+	rows, err := db.Query(query)
+	defer rows.Close()
+
+	if err != nil {
+		err := util.DatabaseError{
+			Message: "Unable to execute query",
+		}
+		return false, &err
+	}
 
 	// Check if there are any rows returned by the query
-	if !rows.Next() {
-		return nil, nil
+	cols, _ := rows.Columns()
+
+	if len(cols) == 0 {
+		return false, nil
 	}
 
-	// Interpret query
-	for rows.Next() {
-		err := rows.Scan(&result)
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	rows.Close()
-	db.Close()
-
-	return result, nil
+	return true, nil
 }
 
-func FindUserByUsername(file string, username string) (*util.User, error) {
-	result := new(util.User)
+func FindUserForLogin(file string, username string) (util.LoginResponse, *util.DatabaseError) {
+	result := util.LoginResponse{}
 
 	// Error opening the database file
 	db, err := sql.Open("sqlite3", file)
+	defer db.Close()
 
-	// Error
+	// Error opening the database
 	if err != nil {
-		return nil, err
+		err := util.DatabaseError{
+			Message: "Unable to open database file",
+		}
+		return result, &err
 	}
 
 	// Format the query string
-	query := fmt.Sprintf(`SELECT username FROM users WHERE username='%s';`, username)
+	query := fmt.Sprintf(`SELECT username,password FROM users WHERE username='%s';`, username)
 
 	rows, _ := db.Query(query)
+	defer rows.Close()
 
-	// Check if there are any rows returned by the query
-	if !rows.Next() {
-		return nil, nil
-	}
-
-	// Interpret query
-	for rows.Next() {
-		err := rows.Scan(&result)
-
-		if err != nil {
-			return nil, err
+	if rows.Next() {
+		if err := rows.Scan(&result.Username, &result.Password); err != nil {
+			err := util.DatabaseError{
+				Message: "Unable to parse query results",
+			}
+			return result, &err
 		}
 	}
-
-	rows.Close()
-	db.Close()
 
 	return result, nil
 }
