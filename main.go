@@ -20,7 +20,7 @@ var settings = s.NewSettingsHandler()
 
 func init() {
 	// Load environment variables
-	err := env.Load(".env")
+	err := env.Load()
 
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -54,11 +54,10 @@ func setup() {
 	handler := cors.Default().Handler(r)
 
 	// Serve
-	//log.Println("Starting service on")
+	log.Println("Starting server on http://localhost:3000")
 	log.Fatal(http.ListenAndServe(":3000", handler))
 }
 
 func main() {
-
 	setup()
 }

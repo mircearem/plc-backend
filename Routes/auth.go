@@ -2,9 +2,10 @@ package Routes
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
 	"os"
+
 	db "plc-backend/Db"
 	util "plc-backend/Utils"
 
@@ -29,30 +30,36 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the path to the db file
-	pwd, _ := os.Getwd()
-	path := pwd + "/app.db"
+	// Variables to handle the file descriptor of the data
+	var pwd string
+	var path string
+
+	// Set the path for the db file
+	pwd, _ = os.Getwd()
+	path = pwd + "/app.db"
 
 	// Check to see wether the username provided is already taken
-	result, dbErr := db.FindUserForSignup(path, user)
+	result, dbErr := db.FindUser(path, user)
 
 	// If db cannot be accessed, return internal server error
 	if dbErr != nil {
-		resp, _ := json.Marshal(*dbErr)
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(resp)
+		w.Write([]byte(dbErr.Error()))
 		return
 	}
 
 	// If username or email is already in the database, return error
-	if result {
-		result := util.DatabaseError{
-			Message: "Username or email already in use",
+	if result != nil {
+		log.Println((result.Username == user.Username) || (result.Email == user.Email))
+		if (result.Username == user.Username) || (result.Email == user.Email) {
+			result := util.DatabaseError{
+				Message: "Username or email already in use",
+			}
+			json, _ := json.Marshal(result)
+			w.WriteHeader(http.StatusConflict)
+			w.Write(json)
+			return
 		}
-		json, _ := json.Marshal(result)
-		w.WriteHeader(http.StatusConflict)
-		w.Write(json)
-		return
 	}
 
 	// User is not already in the database, insert the user
@@ -97,18 +104,20 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the path to the db file
+	// Set the path for the db file
 	pwd, _ := os.Getwd()
 	path := pwd + "/app.db"
 
+	user := util.User{}
+	user.Username = loginRequest.Username
+
 	// Check to see wether the username provided is already taken
-	usr, dbErr := db.FindUserForLogin(path, loginRequest.Username)
+	usr, dbErr := db.FindUser(path, &user)
 
 	// If db cannot be accessed, return internal server error
 	if dbErr != nil {
-		resp, _ := json.Marshal(dbErr)
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(resp)
+		w.Write([]byte(dbErr.Error()))
 		return
 	}
 
@@ -117,24 +126,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	w.Write(result)
 }
 
+// This route will update user email or password
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-
-	keys, ok := r.URL.Query()["key"]
-
-	// if there are no params in the request, send back error
-	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	username := keys[0]
-
-	fmt.Println(username)
-
-	w.WriteHeader(http.StatusOK)
 }
 
+// This route will delete the user
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 }
