@@ -34,7 +34,7 @@ func init() {
 	}
 }
 
-func setup() {
+func main() {
 	r := mux.NewRouter()
 
 	r.Use(Helmet.New())
@@ -44,18 +44,19 @@ func setup() {
 	// Websocket handler
 	r.HandleFunc("/ws", ws.Write)
 
-	// Route handlers
+	// Handle unprotected routes
 	r.HandleFunc("/users/signup", Routes.Register).Methods("POST")
-	r.HandleFunc("/users/update", Routes.UpdateUser).Methods("POST")
 	r.HandleFunc("/users/login", Routes.Login).Methods("POST")
-	r.HandleFunc("/settings", settings.Get).Methods("GET")
-	r.HandleFunc("/settings", settings.Set).Methods("POST")
-
 	// Protected routes
-	// Create a subrouter
 
+	// Create a subrouter
 	protected := r.PathPrefix("/auth/").Subrouter()
 	protected.Use(auth.JwtVerify)
+
+	// Handle protected routes
+	protected.HandleFunc("/users/update", Routes.UpdateUser).Methods("POST")
+	protected.HandleFunc("/settings", settings.Get).Methods("GET")
+	protected.HandleFunc("/settings", settings.Set).Methods("POST")
 
 	// Add CORS headers
 	handler := cors.Default().Handler(r)
@@ -63,8 +64,4 @@ func setup() {
 	// Serve
 	log.Println("Starting server on http://localhost:3000")
 	log.Fatal(http.ListenAndServe(":3000", handler))
-}
-
-func main() {
-	setup()
 }
