@@ -5,10 +5,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	db "plc-backend/Db"
 	util "plc-backend/Utils"
 
+	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -121,9 +123,49 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, _ := json.Marshal(usr)
-	w.WriteHeader(http.StatusOK)
-	w.Write(result)
+	// User not found, query returns nil
+	if usr == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	// Compare password with hashed password from the database
+	compare := bcrypt.CompareHashAndPassword([]byte(usr.Password), []byte(loginRequest.Password))
+
+	// Password is not correct
+	if compare != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	// Password valid, generate jsonwebtoken
+	expirationTime := time.Now().Add(time.Minute * 5)
+
+	claims := &util.Claims{
+		Username: loginRequest.Username,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime.Unix(),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	var jwtKey = []byte(os.Getenv("JWT_SECRET"))
+
+	tokenString, err := token.SignedString(jwtKey)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	// Set the cookies
+	http.SetCookie(w, &http.Cookie{
+		Name:    "token",
+		Value:   tokenString,
+		Expires: expirationTime,
+	})
 }
 
 // This route will update user email or password

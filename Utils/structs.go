@@ -1,21 +1,18 @@
 package Utils
 
-import "github.com/go-playground/validator/v10"
+import (
+	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt"
+)
 
 type DatabaseError struct {
 	Message string `json:"message"`
 }
 
-type updateRequest struct {
-	jwt   string
-	param string
-}
-
-// Struct to define validation errors
-type errorResponse struct {
-	FailedField string
-	Tag         string
-	Value       string
+// Claim to be encoded by jwt library
+type Claims struct {
+	Username string `json:"username"`
+	jwt.StandardClaims
 }
 
 // Struct to define login request
@@ -24,10 +21,11 @@ type LoginRequest struct {
 	Password string `json:"password" validate:"required"`
 }
 
-// Struct to define login response
-type LoginResponse struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+// Struct to define validation errors
+type errorResponse struct {
+	FailedField string
+	Tag         string
+	Value       string
 }
 
 // Method to validate login request
