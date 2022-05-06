@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	auth "plc-backend/Auth"
 	"plc-backend/File"
 	"plc-backend/Helmet"
 	"plc-backend/Routes"
@@ -49,6 +50,12 @@ func setup() {
 	r.HandleFunc("/users/login", Routes.Login).Methods("POST")
 	r.HandleFunc("/settings", settings.Get).Methods("GET")
 	r.HandleFunc("/settings", settings.Set).Methods("POST")
+
+	// Protected routes
+	// Create a subrouter
+
+	protected := r.PathPrefix("/auth/").Subrouter()
+	protected.Use(auth.JwtVerify)
 
 	// Add CORS headers
 	handler := cors.Default().Handler(r)
