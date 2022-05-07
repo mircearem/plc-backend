@@ -12,7 +12,7 @@ type User struct {
 	Username string `json:"username" validate:"required,username"`
 	Password string `json:"password" validate:"required,password"`
 	Email    string `json:"email" validate:"required"`
-	Admin    *bool  `json:"admin" validate:"required"`
+	Admin    string `json:"admin" validate:"required"`
 }
 
 func (user *User) Validate() []*errorResponse {

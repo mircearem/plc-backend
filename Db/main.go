@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	util "plc-backend/Utils"
-	"strconv"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -25,7 +24,7 @@ func InsertUser(file string, user *util.User) error {
 		(username, password, email, admin)
 		VALUES
 		('%s', '%s', '%s', '%s');`,
-		user.Username, user.Password, user.Email, strconv.FormatBool(*user.Admin))
+		user.Username, user.Password, user.Email, user.Admin)
 
 	insert, _ := db.Prepare(query)
 
