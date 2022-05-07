@@ -41,9 +41,8 @@ func (user *User) Validate() []*errorResponse {
 
 func validateUsername(fl validator.FieldLevel) bool {
 	username := fl.Field().String()
-	var regex *regexp.Regexp
 
-	regex = regexp.MustCompile(`^[a-z0-9_-]{5,10}$`)
+	regex := regexp.MustCompile(`^[a-z0-9_-]{5,10}$`)
 
 	return regex.MatchString(username)
 }
