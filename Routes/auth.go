@@ -2,7 +2,6 @@ package Routes
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -52,7 +51,6 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	// If username or email is already in the database, return error
 	if result != nil {
-		log.Println((result.Username == user.Username) || (result.Email == user.Email))
 		if (result.Username == user.Username) || (result.Email == user.Email) {
 			result := util.DatabaseError{
 				Message: "Username or email already in use",
@@ -143,6 +141,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	claims := &util.Claims{
 		Username: loginRequest.Username,
+		Admin:    usr.Admin,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
@@ -166,6 +165,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		Value:   tokenString,
 		Expires: expirationTime,
 	})
+}
+
+func Logout(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 }
 
 // This route will update user email or password

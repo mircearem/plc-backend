@@ -12,6 +12,7 @@ type DatabaseError struct {
 // Claim to be encoded by jwt library
 type Claims struct {
 	Username string `json:"username"`
+	Admin    *bool  `json:"admin"`
 	jwt.StandardClaims
 }
 
