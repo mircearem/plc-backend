@@ -13,11 +13,14 @@ import (
 	ws "plc-backend/Websocket"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 	env "github.com/joho/godotenv"
 	"github.com/rs/cors"
 )
 
 var settings = s.NewSettingsHandler()
+
+var store = sessions.NewCookieStore()
 
 func init() {
 	// Load environment variables
@@ -54,7 +57,12 @@ func main() {
 	protected.Use(auth.JwtVerify)
 
 	// Handle protected routes
+
+	// User management
 	protected.HandleFunc("/users/update", Routes.UpdateUser).Methods("POST")
+	protected.HandleFunc("/users/logout", Routes.Logout).Methods("POST")
+
+	// Settings file management
 	protected.HandleFunc("/settings", settings.Get).Methods("GET")
 	protected.HandleFunc("/settings", settings.Set).Methods("POST")
 

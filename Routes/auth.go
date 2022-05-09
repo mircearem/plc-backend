@@ -161,7 +161,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	// Set the cookies
 	http.SetCookie(w, &http.Cookie{
-		Name:    "token",
+		Name:    "session",
 		Value:   tokenString,
 		Expires: expirationTime,
 	})
@@ -169,6 +169,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 func Logout(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+
+	// Set the cookie to expire an hour ago
+	http.SetCookie(w, &http.Cookie{
+		Name:    "session",
+		Value:   "",
+		Expires: time.Now().Add(-time.Hour),
+	})
 }
 
 // This route will update user email or password
