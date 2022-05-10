@@ -13,14 +13,13 @@ import (
 	ws "plc-backend/Websocket"
 
 	"github.com/gorilla/mux"
-	"github.com/gorilla/sessions"
 	env "github.com/joho/godotenv"
 	"github.com/rs/cors"
 )
 
 var settings = s.NewSettingsHandler()
 
-var store = sessions.NewCookieStore()
+var sessions = new(Routes.Sessions)
 
 func init() {
 	// Load environment variables
@@ -49,7 +48,7 @@ func main() {
 
 	// Handle unprotected routes
 	r.HandleFunc("/users/signup", Routes.Register).Methods("POST")
-	r.HandleFunc("/users/login", Routes.Login).Methods("POST")
+	r.HandleFunc("/users/login", sessions.Login).Methods("POST")
 	// Protected routes
 
 	// Create a subrouter
@@ -60,7 +59,7 @@ func main() {
 
 	// User management
 	protected.HandleFunc("/users/update", Routes.UpdateUser).Methods("POST")
-	protected.HandleFunc("/users/logout", Routes.Logout).Methods("POST")
+	protected.HandleFunc("/users/logout", sessions.Logout).Methods("POST")
 
 	// Settings file management
 	protected.HandleFunc("/settings", settings.Get).Methods("GET")

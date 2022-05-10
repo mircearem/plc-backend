@@ -4,10 +4,18 @@ import (
 	"net/http"
 	"os"
 	util "plc-backend/Utils"
+	"sync"
 
 	"github.com/golang-jwt/jwt"
 )
 
+// Open sessions
+type Sessions struct {
+	sync.WaitGroup
+	store map[string]string
+}
+
+// Middleware to determine if the jwt is valid
 func JwtVerify(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session")
@@ -57,6 +65,10 @@ func JwtVerify(next http.Handler) http.Handler {
 	})
 }
 
-func IsAdmin() {
-	// Claims contains a property called admin, this has to be true
+// Middleware to determine if user is admin or not
+func IsAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		next.ServeHTTP(w, r)
+	})
 }

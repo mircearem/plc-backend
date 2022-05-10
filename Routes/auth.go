@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	db "plc-backend/Db"
@@ -12,6 +13,11 @@ import (
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
+
+type Sessions struct {
+	sync.Mutex
+	sessions map[string]string
+}
 
 func Register(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -88,7 +94,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func Login(w http.ResponseWriter, r *http.Request) {
+func (s *Sessions) Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	// Parse username and password
@@ -159,6 +165,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s.Lock()
+
+	s.sessions[loginRequest.Username] = tokenString
+
+	s.Unlock()
+
 	// Set the cookies
 	http.SetCookie(w, &http.Cookie{
 		Name:    "session",
@@ -167,14 +179,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func Logout(w http.ResponseWriter, r *http.Request) {
+func (s *Sessions) Logout(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	// Set the cookie to expire an hour ago
 	http.SetCookie(w, &http.Cookie{
-		Name:    "session",
-		Value:   "",
-		Expires: time.Now().Add(-time.Hour),
+		Name:   "session",
+		Value:  "",
+		MaxAge: -1,
 	})
 }
 
