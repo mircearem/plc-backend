@@ -19,7 +19,7 @@ import (
 
 var settings = s.NewSettingsHandler()
 
-var sessions = new(Routes.Sessions)
+var store = new(Routes.Sessions)
 
 func init() {
 	// Load environment variables
@@ -34,6 +34,8 @@ func init() {
 		strSettings, _ := File.Read(os.Getenv("SETTINGS"))
 		json.Unmarshal([]byte(strSettings), &settings.Settings)
 	}
+
+	store.Store = make(map[string]string)
 }
 
 func main() {
@@ -48,7 +50,7 @@ func main() {
 
 	// Handle unprotected routes
 	r.HandleFunc("/users/signup", Routes.Register).Methods("POST")
-	r.HandleFunc("/users/login", sessions.Login).Methods("POST")
+	r.HandleFunc("/users/login", store.UserLogin).Methods("POST")
 	// Protected routes
 
 	// Create a subrouter
@@ -59,7 +61,7 @@ func main() {
 
 	// User management
 	protected.HandleFunc("/users/update", Routes.UpdateUser).Methods("POST")
-	protected.HandleFunc("/users/logout", sessions.Logout).Methods("POST")
+	protected.HandleFunc("/users/logout", store.UserLogout).Methods("POST")
 
 	// Settings file management
 	protected.HandleFunc("/settings", settings.Get).Methods("GET")

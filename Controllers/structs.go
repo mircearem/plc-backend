@@ -1,29 +1,31 @@
-package Routes
+package Controllers
 
 import (
 	"encoding/json"
 	"net/http"
 	"os"
-	"sync"
-	"time"
-
+	auth "plc-backend/Auth"
 	db "plc-backend/Db"
-	util "plc-backend/Utils"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type Sessions struct {
-	sync.Mutex
-	sessions map[string]string
+// Settings struct
+type Settings struct {
+	Auto  *bool   `json:"Auto" validate:"required"`
+	Ratio float32 `json:"Ratio" validate:"required,numeric,min=1,max=100"`
+	Kp    float32 `json:"Kp" validate:"required,numeric"`
+	Tn    float32 `json:"Tn" validate:"required,numeric"`
+	Tv    float32 `json:"Tv" validate:"required,numeric"`
 }
 
-func Register(w http.ResponseWriter, r *http.Request) {
+func UserRegister(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	// Get the data from the request
-	user := new(util.User)
+	user := new(auth.User)
 	_ = json.NewDecoder(r.Body).Decode(&user)
 
 	// Validate user data
@@ -94,7 +96,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (s *Sessions) Login(w http.ResponseWriter, r *http.Request) {
+func (s *Sessions) UserLogin(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	// Parse username and password
@@ -165,11 +167,14 @@ func (s *Sessions) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Add the cookie to the store
 	s.Lock()
 
-	s.sessions[loginRequest.Username] = tokenString
+	if _, ok := s.Store[tokenString]; !ok {
+		s.Store[tokenString] = loginRequest.Username
+	}
 
-	s.Unlock()
+	defer s.Unlock()
 
 	// Set the cookies
 	http.SetCookie(w, &http.Cookie{
@@ -179,8 +184,19 @@ func (s *Sessions) Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (s *Sessions) Logout(w http.ResponseWriter, r *http.Request) {
+func (s *Sessions) UserLogout(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	// Extract the token string from the request
+	tokenString, _ := r.Cookie("session")
+
+	// Delete the cookie from the store
+	s.Lock()
+
+	if _, ok := s.Store[tokenString.Value]; ok {
+		delete(s.Store, tokenString.Value)
+	}
+
+	s.Unlock()
 
 	// Set the cookie to expire an hour ago
 	http.SetCookie(w, &http.Cookie{

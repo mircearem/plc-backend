@@ -1,4 +1,4 @@
-package Routes
+package Controllers
 
 import (
 	"encoding/json"
@@ -9,20 +9,6 @@ import (
 
 	"github.com/go-playground/validator/v10"
 )
-
-type settings struct {
-	Auto  *bool   `json:"Auto" validate:"required"`
-	Ratio float32 `json:"Ratio" validate:"required,numeric,min=1,max=100"`
-	Kp    float32 `json:"Kp" validate:"required,numeric"`
-	Tn    float32 `json:"Tn" validate:"required,numeric"`
-	Tv    float32 `json:"Tv" validate:"required,numeric"`
-}
-
-type errorResponse struct {
-	FailedField string
-	Tag         string
-	Value       string
-}
 
 func validate(str settings) []*errorResponse {
 	validate := validator.New()

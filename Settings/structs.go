@@ -2,18 +2,10 @@ package Utils
 
 import (
 	"github.com/go-playground/validator/v10"
-	"github.com/golang-jwt/jwt"
 )
 
 type DatabaseError struct {
 	Message string `json:"message"`
-}
-
-// Claim to be encoded by jwt library
-type Claims struct {
-	Username string `json:"username"`
-	Admin    string `json:"admin"`
-	jwt.StandardClaims
 }
 
 // Struct to define login request

@@ -1,4 +1,4 @@
-package Utils
+package auth
 
 import (
 	"regexp"
@@ -7,12 +7,19 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+// User struct
 type User struct {
 	Id       int    `json:"id"`
 	Username string `json:"username" validate:"required,username"`
 	Password string `json:"password" validate:"required,password"`
 	Email    string `json:"email" validate:"required"`
 	Admin    string `json:"admin" validate:"required"`
+}
+
+type errorResponse struct {
+	FailedField string
+	Tag         string
+	Value       string
 }
 
 func (user *User) Validate() []*errorResponse {

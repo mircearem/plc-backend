@@ -1,22 +1,22 @@
+// Package that handles jwt authentication and authorization
 package auth
 
 import (
 	"net/http"
 	"os"
-	util "plc-backend/Utils"
-	"sync"
 
 	"github.com/golang-jwt/jwt"
 )
 
-// Open sessions
-type Sessions struct {
-	sync.WaitGroup
-	store map[string]string
+// Claim to be encoded by jwt library
+type Claims struct {
+	Username string `json:"username"`
+	Admin    string `json:"admin"`
+	jwt.StandardClaims
 }
 
 // Middleware to determine if the jwt is valid
-func JwtVerify(next http.Handler) http.Handler {
+func CheckJwtValidity(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session")
 
@@ -34,7 +34,7 @@ func JwtVerify(next http.Handler) http.Handler {
 		// Cookie found, extract the token
 		tokenString := cookie.Value
 
-		claims := &util.Claims{}
+		claims := &Claims{}
 
 		// Parse the token
 		tkn, err := jwt.ParseWithClaims(tokenString, claims,
@@ -66,7 +66,7 @@ func JwtVerify(next http.Handler) http.Handler {
 }
 
 // Middleware to determine if user is admin or not
-func IsAdmin(next http.Handler) http.Handler {
+func CheckAdminStatus(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		next.ServeHTTP(w, r)
