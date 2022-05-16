@@ -5,30 +5,11 @@ import (
 	"net/http"
 	"os"
 	"plc-backend/File"
+	settings "plc-backend/Settings"
 	"plc-backend/Shm"
-
-	"github.com/go-playground/validator/v10"
 )
 
-func validate(str settings) []*errorResponse {
-	validate := validator.New()
-	var errors []*errorResponse
-
-	err := validate.Struct(str)
-
-	if err != nil {
-		for _, err := range err.(validator.ValidationErrors) {
-			var element errorResponse
-			element.FailedField = err.StructNamespace()
-			element.Tag = err.Tag()
-			element.Value = err.Param()
-			errors = append(errors, &element)
-		}
-	}
-
-	return errors
-}
-
+// Wrap sessions handler around request handler
 func ReadSettings(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -48,11 +29,12 @@ func ReadSettings(w http.ResponseWriter, r *http.Request) {
 func WriteSettings(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	contents := new(settings)
+	contents := new(settings.Settings)
+
 	_ = json.NewDecoder(r.Body).Decode(&contents)
 
 	// Body has invalid format
-	err := validate(*contents)
+	err := contents.Validate()
 	if err != nil {
 		resp, _ := json.Marshal(err)
 		w.WriteHeader(http.StatusBadRequest)

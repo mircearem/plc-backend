@@ -4,12 +4,16 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	util "plc-backend/Utils"
+	auth "plc-backend/Auth"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func InsertUser(file string, user *util.User) error {
+type DatabaseError struct {
+	Message string `json:"message"`
+}
+
+func InsertUser(file string, user *auth.User) error {
 	db, err := sql.Open("sqlite3", file)
 
 	if err != nil {
@@ -37,7 +41,7 @@ func InsertUser(file string, user *util.User) error {
 	return nil
 }
 
-func FindUser(f string, u *util.User) (*util.User, error) {
+func FindUser(f string, u *auth.User) (*auth.User, error) {
 	// Open the database
 	db, err := sql.Open("sqlite3", f)
 
@@ -59,7 +63,7 @@ func FindUser(f string, u *util.User) (*util.User, error) {
 	defer row.Close()
 
 	// Parse the results of the query
-	user := util.User{}
+	user := auth.User{}
 
 	if row.Next() {
 		if err := row.Scan(&user.Id, &user.Username, &user.Password, &user.Email, &user.Admin); err != nil {
@@ -87,6 +91,6 @@ func UpdateUser(file string, username string, cols []string, params []string) er
 	return nil
 }
 
-func DeleteUser(file string, user *util.User) error {
+func DeleteUser(file string, user *auth.User) error {
 	return nil
 }

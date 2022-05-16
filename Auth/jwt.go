@@ -68,6 +68,25 @@ func CheckJwtValidity(next http.Handler) http.Handler {
 // Middleware to determine if user is admin or not
 func CheckAdminStatus(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// No sense to check for error, cookie is clearly there
+		cookie, _ := r.Cookie("session")
+		tokenString := cookie.Value
+
+		claims := &Claims{}
+
+		// Should be no parsing error, cookie is clearly there
+		// otherwise this middleware would not been reached
+		jwt.ParseWithClaims(tokenString, claims,
+			func(t *jwt.Token) (interface{}, error) {
+				return []byte(os.Getenv("JWT_SECRET")), nil
+			},
+		)
+
+		// User is not admin
+		if !(claims.Admin == "true") {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
 
 		next.ServeHTTP(w, r)
 	})

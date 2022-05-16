@@ -1,4 +1,4 @@
-package Utils
+package settings
 
 import (
 	"encoding/json"
@@ -24,11 +24,18 @@ type SettingsHandler struct {
 	Settings Settings
 }
 
-func ValidateSettings(set Settings) []*errorResponse {
+// Struct to define validation errors
+type errorResponse struct {
+	FailedField string
+	Tag         string
+	Value       string
+}
+
+func (s *Settings) Validate() []*errorResponse {
 	validate := validator.New()
 	var errors []*errorResponse
 
-	err := validate.Struct(set)
+	err := validate.Struct(s)
 
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
@@ -62,7 +69,7 @@ func (s *SettingsHandler) Set(w http.ResponseWriter, r *http.Request) {
 	settings := new(Settings)
 	_ = json.NewDecoder(r.Body).Decode(&settings)
 
-	valid_err := ValidateSettings(*settings)
+	valid_err := settings.Validate()
 
 	// Invalid settings format, exit
 	if valid_err != nil {

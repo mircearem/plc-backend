@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"os"
 	auth "plc-backend/Auth"
+	"plc-backend/Controllers"
 	"plc-backend/File"
 	"plc-backend/Helmet"
-	"plc-backend/Routes"
-	s "plc-backend/Utils"
+	s "plc-backend/Settings"
 	ws "plc-backend/Websocket"
 
 	"github.com/gorilla/mux"
@@ -19,7 +19,7 @@ import (
 
 var settings = s.NewSettingsHandler()
 
-var store = new(Routes.Sessions)
+var store = new(auth.Sessions).Init()
 
 func init() {
 	// Load environment variables
@@ -34,8 +34,6 @@ func init() {
 		strSettings, _ := File.Read(os.Getenv("SETTINGS"))
 		json.Unmarshal([]byte(strSettings), &settings.Settings)
 	}
-
-	store.Store = make(map[string]string)
 }
 
 func main() {
@@ -43,25 +41,25 @@ func main() {
 
 	r.Use(Helmet.New())
 
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("/usr/frontend/static"))))
+	// r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("/usr/frontend/static"))))
 
 	// Websocket handler
 	r.HandleFunc("/ws", ws.Write)
 
 	// Handle unprotected routes
-	r.HandleFunc("/users/signup", Routes.Register).Methods("POST")
-	r.HandleFunc("/users/login", store.UserLogin).Methods("POST")
-	// Protected routes
+	r.HandleFunc("/users/signup", Controllers.UserRegister).Methods("POST")
+	r.HandleFunc("/users/login", Controllers.UserLogin(store)).Methods("POST")
 
+	// Protected routes
 	// Create a subrouter
 	protected := r.PathPrefix("/auth/").Subrouter()
-	protected.Use(auth.JwtVerify)
+	protected.Use(auth.CheckJwtValidity)
 
 	// Handle protected routes
 
 	// User management
-	protected.HandleFunc("/users/update", Routes.UpdateUser).Methods("POST")
-	protected.HandleFunc("/users/logout", store.UserLogout).Methods("POST")
+	//protected.HandleFunc("/users/update", Controllers.UpdateUser).Methods("POST")
+	protected.HandleFunc("/users/logout", Controllers.UserLogout(store)).Methods("POST")
 
 	// Settings file management
 	protected.HandleFunc("/settings", settings.Get).Methods("GET")
