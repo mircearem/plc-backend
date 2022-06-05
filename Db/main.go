@@ -79,8 +79,8 @@ func FindUser(f string, u *auth.User) (*auth.User, error) {
 	return &user, nil
 }
 
-func UpdateUser(file string, username string, cols []string, params []string) error {
-	db, err := sql.Open("sqlite3", file)
+func UpdateUser(f string, u *auth.User) error {
+	db, err := sql.Open("sqlite3", f)
 
 	if err != nil {
 		return errors.New("Error opening database")

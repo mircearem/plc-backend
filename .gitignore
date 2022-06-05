@@ -2,3 +2,4 @@
 *.db3
 *.db-journal
 *.env
+backend

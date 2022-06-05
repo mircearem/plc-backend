@@ -44,7 +44,7 @@ func main() {
 	// r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("/usr/frontend/static"))))
 
 	// Websocket handler
-	r.HandleFunc("/ws", ws.Write)
+	r.HandleFunc("/ws", ws.Handler)
 
 	// Handle unprotected routes
 	r.HandleFunc("/users/signup", Controllers.UserRegister).Methods("POST")
